@@ -72,7 +72,7 @@ void pump(double tDelay) {
  * Get the force of the sensor
  * @return return the pressure, if no pressure is detected, return -1 
  */
-int getForce() {
+float getForce() {
   int fsrADC = analogRead(FSR_PIN);
 
   if (fsrADC != 0) {
@@ -96,16 +96,16 @@ int getForce() {
   else {
     // If no force is detected
     delay(100);
-    return -1;
+    return -1.0;
   }
 }
 
 /**
  * Pump the ventilator code 
  */
-void pumpVentilator(int desiredValue) {
+void pumpVentilator(float desiredValue) {
   // Pump the ventilator code here
-  int force = getForce();
+  float force = getForce();
 
   if (force != -1)
   {
@@ -154,7 +154,7 @@ void loop() {
   // Pump the ventilator 
   if (isOn) {
     // Attempt to pump venitilator so the pressure sensor reads a pressure of 25 cmH20
-    pumpVentilator(25);
+    pumpVentilator(25.0);
   }
   else {
     // Reset PID values

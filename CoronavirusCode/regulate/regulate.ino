@@ -19,13 +19,13 @@ Servo servoMotor; // Add the SERVO MOTOR that will pump the ventilator
 
 // THESE VALUES WILL NEED TO BE TUNED -> by tuning them, this will regulate the pump
 float kP = 0.006; // Currently estimated to start approximately at 25 pumps per minute 
-float kI = 0.0;
+float kI = 0.00001;
 float kD = 0.006;
 
-int errorPump = 0;
-int preErrorPump = 0;
-int derivativePump = 0;
-int totalError = 0;
+double errorPump = 0.0;
+double preErrorPump = 0.0;
+double derivativePump = 0.0;
+double totalError = 0.0;
 
 /**
  * Set up function 
@@ -113,8 +113,9 @@ void pumpVentilator(float desiredValue) {
     errorPump = desiredValue - force;
     totalError += errorPump;
     derivativePump = errorPump - preErrorPump;
-  
-    double pumpsPerSecond = (kP * errorPump) + (totalError * kI) + (derivativePump * kD);
+
+    // type cast the pumps per seconds 
+    double pumpsPerSecond = (double)((kP * errorPump) + (totalError * kI) + (derivativePump * kD));
     preErrorPump = errorPump;
     // Ensure it is not over 30 pumps per minute
     if (pumpsPerSecond > .5) {
@@ -159,10 +160,10 @@ void loop() {
   }
   else {
     // Reset PID values
-    errorPump = 0;
-    totalError = 0;
-    derivativePump = 0;
-    preErrorPump = 0;
+    errorPump = 0.0;
+    totalError = 0.0;
+    derivativePump = 0.0;
+    preErrorPump = 0.0;
   }
 
   delay(100); // delay to not hog the CPU

@@ -114,7 +114,7 @@ void pumpVentilator(int desiredValue) {
     derivativePump = errorPump - preErrorPump;
   
     double pumpsPerSecond = (kP * errorPump) + (totalError * kI) + (derivativePump * kD);
-  
+    preErrorPump = errorPump;
     // Ensure it is not over 30 pumps per minute
     if (pumpsPerSecond > .5) {
       pumpsPerSecond = .5;

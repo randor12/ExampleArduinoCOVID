@@ -8,8 +8,7 @@
 
 #include <Servo.h>
 
-const int ON_BUTTON = 4; // Add the ON BUTTON to Port 4
-const int OFF_BUTTON = 5; // Add the OFF BUTTON to Port 5
+const int ON_BUTTON = 4; // Add the ON-OFF BUTTON to Port 4
 bool isOn; // check if the ventilator should be on and pumping 
 const int FSR_PIN = A0; // PRESSURE SENSOR in Port ANALOG 0 (A0)
 const float VCC = 4.98; // Measure VOLTS of Arduino 5V line
@@ -35,7 +34,6 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   pinMode(ON_BUTTON, INPUT);
-  pinMode(OFF_BUTTON, INPUT);
   pinMode(FSR_PIN, INPUT);
   servoMotor.attach(9); // attach to port 9
   isOn = false;
@@ -141,16 +139,18 @@ void pumpVentilator(float desiredValue) {
 void loop() {
   // put your main code here, to run repeatedly:
   int onButton = digitalRead(ON_BUTTON);
-  int offButton = digitalRead(OFF_BUTTON);
+  bool flag = false; // Toggle if the button is being pressed or not
    
   // Turn the ventilator pump on
   if (onButton == HIGH) {
-    isOn = true;
+    if (!flag)
+    {
+      isOn = (isOn) ? false : true; // Change if the ventilator is on or off
+      flag = true;
+    }
   }
-
-  // Turn the ventialor pump off
-  if (offButton == HIGH) {
-    isOn = false;
+  else if (flag){
+    flag = false;
   }
 
   // Pump the ventilator 

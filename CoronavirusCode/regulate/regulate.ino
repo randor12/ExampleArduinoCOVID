@@ -102,6 +102,7 @@ float getForce() {
 
 /**
  * Pump the ventilator code 
+ * @arg desiredValue desired force value in cmH20 
  */
 void pumpVentilator(float desiredValue) {
   // Pump the ventilator code here

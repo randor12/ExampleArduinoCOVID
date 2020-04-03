@@ -44,7 +44,7 @@ void setup() {
 
 /**
  * Pump the ventilator 
- * @arg tDelay this is the time delay in milliseconds for the pump
+ * @arg tDelay this is the time delay in seconds per pump
  */
 void pump(double tDelay) {
   

@@ -153,7 +153,15 @@ void loop() {
 
   // Pump the ventilator 
   if (isOn) {
+    // Attempt to pump venitilator so the pressure sensor reads a pressure of 25 cmH20
     pumpVentilator(25);
+  }
+  else {
+    // Reset PID values
+    errorPump = 0;
+    totalError = 0;
+    derivativePump = 0;
+    preErrorPump = 0;
   }
 
   delay(100); // delay to not hog the CPU

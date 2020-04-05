@@ -7,6 +7,7 @@
  */
 
 #include <Servo.h>
+#include <Stepper.h>
 
 const int ON_BUTTON = 4; // Add the ON-OFF BUTTON to Port 4
 bool isOn; // check if the ventilator should be on and pumping 
@@ -15,6 +16,8 @@ const float VCC = 4.98; // Measure VOLTS of Arduino 5V line
 const float R_DIV = 3230.0; // Average RESISTANCE of Arduino (3.3k resistor)
 
 Servo servoMotor; // Add the SERVO MOTOR that will pump the ventilator
+const int stepsPerRevolution = 200;
+Stepper stepMotor(stepsPerRevolution, 10, 11, 12, 13); // Initialize STEPPER motor on Ports 10, 11, 12, 13
 
 // THESE VALUES WILL NEED TO BE TUNED -> by tuning them, this will regulate the pump
 float kP = 0.006; // Currently estimated to start approximately at 25 pumps per minute 
@@ -36,8 +39,20 @@ void setup() {
   pinMode(ON_BUTTON, INPUT);
   pinMode(FSR_PIN, INPUT);
   servoMotor.attach(9); // attach to port 9
+  stepMotor.setSpeed(100); // Set at 100 rpm
   isOn = false;
   
+}
+
+/**
+ * pump with the stepper - set the rpm to set the rotations per minute 
+ * @arg rpm rotation per minute
+ */
+void pumpWithStepper(int rpm) {
+  stepMotor.setSpeed(rpm);
+  stepMotor.step(stepsPerRevolution); // Rotate clockwise 1 rotation 
+  delay(500);
+  // stepMotor.step(-stepsPerRevolution); // rotate counterclockwise 1 rotation 
 }
 
 /**

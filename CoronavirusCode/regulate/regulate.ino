@@ -15,6 +15,8 @@ const int FSR_PIN = A0; // PRESSURE SENSOR in Port ANALOG 0 (A0)
 const float VCC = 4.98; // Measure VOLTS of Arduino 5V line
 const float R_DIV = 3230.0; // Average RESISTANCE of Arduino (3.3k resistor)
 
+const int buzzer = 14; // BUZZER on Port 14
+
 Servo servoMotor; // Add the SERVO MOTOR that will pump the ventilator
 const int stepsPerRevolution = 200;
 Stepper stepMotor(stepsPerRevolution, 10, 11, 12, 13); // Initialize STEPPER motor on Ports 10, 11, 12, 13
@@ -41,7 +43,7 @@ void setup() {
   servoMotor.attach(9); // attach to port 9
   stepMotor.setSpeed(100); // Set at 100 rpm
   isOn = false;
-  
+  pinMode(buzzer, OUTPUT);
 }
 
 /**
@@ -155,6 +157,8 @@ void loop() {
   // put your main code here, to run repeatedly:
   int onButton = digitalRead(ON_BUTTON);
   bool flag = false; // Toggle if the button is being pressed or not
+
+  bool problem = false;
    
   // Turn the ventilator pump on
   if (onButton == HIGH) {
@@ -179,6 +183,14 @@ void loop() {
     totalError = 0.0;
     derivativePump = 0.0;
     preErrorPump = 0.0;
+  }
+
+  // Check if there is a problem 
+  if (problem) {
+    tone(buzzer, 1000); // Send 1 KHZ sound signal 
+  }
+  else {
+    noTone(buzzer); // Stop the sound 
   }
 
   delay(100); // delay to not hog the CPU

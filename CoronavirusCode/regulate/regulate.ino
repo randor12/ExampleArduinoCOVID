@@ -51,6 +51,7 @@ void setup() {
  * @arg rpm rotation per minute
  */
 void pumpWithStepper(int rpm) {
+  // Use for loop and move both 1 at a time to move at "same time"
   stepMotor.setSpeed(rpm);
   stepMotor.step(stepsPerRevolution); // Rotate clockwise 1 rotation 
   delay(500);

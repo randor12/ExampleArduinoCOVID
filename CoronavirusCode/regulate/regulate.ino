@@ -7,6 +7,7 @@
  */
 
 //#include <Servo.h>
+#include <Arduino.h>
 #include <Stepper.h>
 
 const int POT = A1; // Add the POTENTIOMETER to Port ANALOG 1 (A1)

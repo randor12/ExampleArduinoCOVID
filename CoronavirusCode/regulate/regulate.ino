@@ -9,7 +9,7 @@
 #include <Servo.h>
 #include <Stepper.h>
 
-const int ON_BUTTON = 4; // Add the ON-OFF BUTTON to Port 4
+const int POT = A1; // Add the POTENTIOMETER to Port ANALOG 1 (A1)
 bool isOn; // check if the ventilator should be on and pumping 
 const int FSR_PIN = A0; // PRESSURE SENSOR in Port ANALOG 0 (A0)
 const float VCC = 4.98; // Measure VOLTS of Arduino 5V line
@@ -18,18 +18,21 @@ const float R_DIV = 3230.0; // Average RESISTANCE of Arduino (3.3k resistor)
 const int buzzer = 14; // BUZZER on Port 14
 
 Servo servoMotor; // Add the SERVO MOTOR that will pump the ventilator
-const int stepsPerRevolution = 200;
+const int stepsPerRevolution = 200; // Might be 360 steps but claims 200 on website 
 Stepper stepMotor(stepsPerRevolution, 10, 11, 12, 13); // Initialize STEPPER motor on Ports 10, 11, 12, 13
 
 // THESE VALUES WILL NEED TO BE TUNED -> by tuning them, this will regulate the pump
-float kP = 0.006; // Currently estimated to start approximately at 25 pumps per minute 
-float kI = 0.00001;
-float kD = 0.006;
+float kP = 0.08; // Currently estimated to start approximately at 25 pumps per minute 
+float kI = 0.0;
+float kD = 0.08;
 
 double errorPump = 0.0;
 double preErrorPump = 0.0;
 double derivativePump = 0.0;
 double totalError = 0.0;
+
+const float desiredForce = 20; // Desired force is 20 cmH2O
+bool problem = false;
 
 /**
  * Set up function 
@@ -38,10 +41,10 @@ double totalError = 0.0;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  pinMode(ON_BUTTON, INPUT);
+  pinMode(POT, INPUT);
   pinMode(FSR_PIN, INPUT);
   servoMotor.attach(9); // attach to port 9
-  stepMotor.setSpeed(100); // Set at 100 rpm
+  stepMotor.setSpeed(25); // Set at 25 rpm
   isOn = false;
   pinMode(buzzer, OUTPUT);
 }
@@ -52,14 +55,43 @@ void setup() {
  */
 void pumpWithStepper(int rpm) {
   // Use for loop and move both 1 at a time to move at "same time"
-  stepMotor.setSpeed(rpm);
-  stepMotor.step(stepsPerRevolution); // Rotate clockwise 1 rotation 
-  delay(500);
+
+  float force = getForce();
+
+  if (force > 30 || force <= 0) {
+    problem = true;
+  }
+  else {
+    problem = false;
+  }
+  
+  errorPump = desiredForce - force;
+  totalError += errorPump;
+  derivativePump = errorPump - preErrorPump;
+  preErrorPump = errorPump;
+
+  float rpmChange = (errorPump * kP) + (totalError * kI) + (derivativePump * kD);
+
+  int newRPM = rpm + rpmChange;
+  // Check RPM is within range of 10 to 30 RPM
+  if (newRPM > 30) {
+    newRPM = 30;
+  }
+  if (newRPM < 10) {
+    newRPM = 10;
+  }
+
+  if (!problem)
+  {  
+    stepMotor.setSpeed(newRPM);
+    stepMotor.step(stepsPerRevolution); // Rotate clockwise 1 rotation 
+    delay(300);
+  }
   // stepMotor.step(-stepsPerRevolution); // rotate counterclockwise 1 rotation 
 }
 
 /**
- * Pump the ventilator 
+ * Pump the ventilator with servo
  * @arg tDelay this is the time delay in seconds per pump
  */
 void pump(double tDelay) {
@@ -107,7 +139,7 @@ float getForce() {
     else
       force =  fsrG / 0.000000642857;
     delay(100);
-    return force;
+    return force; // Force in cmH2O
   }
   else {
     // If no force is detected
@@ -156,27 +188,24 @@ void pumpVentilator(float desiredValue) {
  */
 void loop() {
   // put your main code here, to run repeatedly:
-  int onButton = digitalRead(ON_BUTTON);
-  bool flag = false; // Toggle if the button is being pressed or not
+  int potOn = analogRead(POT);
 
-  bool problem = false;
+  float pumpsPerMin = potOn * (30.0 / 1028.0); // Average speed of pumping 
    
   // Turn the ventilator pump on
-  if (onButton == HIGH) {
-    if (!flag)
-    {
-      isOn = (isOn) ? false : true; // Change if the ventilator is on or off
-      flag = true;
-    }
+  if (pumpsPerMin >= 10) {
+    isOn = true; // Change if the ventilator is on or off
+    
   }
-  else if (flag){
-    flag = false;
+  else {
+    isOn = false;
   }
 
   // Pump the ventilator 
   if (isOn) {
-    // Attempt to pump venitilator so the pressure sensor reads a pressure of 25 cmH20
-    pumpVentilator(25.0);
+    // Attempt to pump venitilator so the pressure sensor reads approximately a pressure of 20 cmH20
+    // pumpVentilator(pumpsPerMin);
+    pumpsWithStepper((int)pumpsPerMin);
   }
   else {
     // Reset PID values

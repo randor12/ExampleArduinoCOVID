@@ -6,7 +6,7 @@
  *              If something is wrong, the ventilator should activate an emergency noise 
  */
 
-#include <Servo.h>
+//#include <Servo.h>
 #include <Stepper.h>
 
 const int POT = A1; // Add the POTENTIOMETER to Port ANALOG 1 (A1)
@@ -16,8 +16,8 @@ const float VCC = 4.98; // Measure VOLTS of Arduino 5V line
 const float R_DIV = 3230.0; // Average RESISTANCE of Arduino (3.3k resistor)
 
 const int buzzer = 14; // BUZZER on Port 14
-
-Servo servoMotor; // Add the SERVO MOTOR that will pump the ventilator
+//
+//Servo servoMotor; // Add the SERVO MOTOR that will pump the ventilator
 const int stepsPerRevolution = 200; // Might be 360 steps but claims 200 on website 
 Stepper stepMotor(stepsPerRevolution, 10, 11, 12, 13); // Initialize STEPPER motor on Ports 10, 11, 12, 13
 
@@ -43,7 +43,7 @@ void setup() {
   Serial.begin(9600);
   pinMode(POT, INPUT);
   pinMode(FSR_PIN, INPUT);
-  servoMotor.attach(9); // attach to port 9
+//  servoMotor.attach(9); // attach to port 9
   stepMotor.setSpeed(25); // Set at 25 rpm
   isOn = false;
   pinMode(buzzer, OUTPUT);

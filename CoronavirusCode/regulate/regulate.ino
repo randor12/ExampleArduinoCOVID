@@ -52,17 +52,15 @@ void setup() {
 /**
  * pump with the stepper - set the rpm to set the rotations per minute 
  * @arg rpm rotation per minute
+ * @return returns false if there are no problems 
  */
-void pumpWithStepper(int rpm) {
+bool pumpWithStepper(int rpm) {
   // Use for loop and move both 1 at a time to move at "same time"
 
   float force = getForce();
 
   if (force > 30 || force <= 0) {
-    problem = true;
-  }
-  else {
-    problem = false;
+    return true;
   }
   
   errorPump = desiredForce - force;
@@ -81,40 +79,39 @@ void pumpWithStepper(int rpm) {
     newRPM = 10;
   }
 
-  if (!problem)
-  {  
-    stepMotor.setSpeed(newRPM);
-    stepMotor.step(stepsPerRevolution); // Rotate clockwise 1 rotation 
-    delay(300);
-  }
+  stepMotor.setSpeed(newRPM);
+  stepMotor.step(stepsPerRevolution); // Rotate clockwise 1 rotation 
+  delay(300);
+
+  return false;
   // stepMotor.step(-stepsPerRevolution); // rotate counterclockwise 1 rotation 
 }
-
-/**
- * Pump the ventilator with servo
- * @arg tDelay this is the time delay in seconds per pump
- */
-void pump(double tDelay) {
-  
-  // NOTE: tDelay should be on average 6 seconds in order to do 25 pumps per minute
-
-  tDelay = ((tDelay * 1000) - 200) / 360.0; // Calculate time delay in milliseconds
-  
-  // Loop though the angle that the servo motor is -> steps by 5 degrees each time
-  for (int i = 0; i < 180; i++) {
-    // Rotate servo motor 180 degrees
-    servoMotor.write(i);
-    delay(tDelay);
-  }
-
-  delay(100);
-  // Loop through the angle of servo motor -> go back
-  for (int i = 180; i > 0; i--) {
-    servoMotor.write(i);
-    delay(tDelay);
-  }
-  delay(100);
-}
+//
+///**
+// * Pump the ventilator with servo
+// * @arg tDelay this is the time delay in seconds per pump
+// */
+//void pump(double tDelay) {
+//  
+//  // NOTE: tDelay should be on average 6 seconds in order to do 25 pumps per minute
+//
+//  tDelay = ((tDelay * 1000) - 200) / 360.0; // Calculate time delay in milliseconds
+//  
+//  // Loop though the angle that the servo motor is -> steps by 5 degrees each time
+//  for (int i = 0; i < 180; i++) {
+//    // Rotate servo motor 180 degrees
+//    servoMotor.write(i);
+//    delay(tDelay);
+//  }
+//
+//  delay(100);
+//  // Loop through the angle of servo motor -> go back
+//  for (int i = 180; i > 0; i--) {
+//    servoMotor.write(i);
+//    delay(tDelay);
+//  }
+//  delay(100);
+//}
 
 /**
  * Get the force of the sensor
@@ -148,39 +145,39 @@ float getForce() {
   }
 }
 
-/**
- * Pump the ventilator code 
- * @arg desiredValue desired force value in cmH20 
- */
-void pumpVentilator(float desiredValue) {
-  // Pump the ventilator code here
-  float force = getForce();
-
-  if (force != -1)
-  {
-    errorPump = desiredValue - force;
-    totalError += errorPump;
-    derivativePump = errorPump - preErrorPump;
-
-    // type cast the pumps per seconds 
-    double pumpsPerSecond = (double)((kP * errorPump) + (totalError * kI) + (derivativePump * kD));
-    preErrorPump = errorPump;
-    // Ensure it is not over 30 pumps per minute
-    if (pumpsPerSecond > .5) {
-      pumpsPerSecond = .5;
-    }
-  
-    // Ensure it is not less than 10 pumps per minute 
-    if (pumpsPerSecond < .17) {
-      pumpsPerSecond = .17;
-    }
-  
-    double secsPerPump = (1.0 / pumpsPerSecond);
-  
-    pump(secsPerPump);
-  }
-  delay(100);
-}
+///**
+// * Pump the ventilator code 
+// * @arg desiredValue desired force value in cmH20 
+// */
+//void pumpVentilator(float desiredValue) {
+//  // Pump the ventilator code here
+//  float force = getForce();
+//
+//  if (force != -1)
+//  {
+//    errorPump = desiredValue - force;
+//    totalError += errorPump;
+//    derivativePump = errorPump - preErrorPump;
+//
+//    // type cast the pumps per seconds 
+//    double pumpsPerSecond = (double)((kP * errorPump) + (totalError * kI) + (derivativePump * kD));
+//    preErrorPump = errorPump;
+//    // Ensure it is not over 30 pumps per minute
+//    if (pumpsPerSecond > .5) {
+//      pumpsPerSecond = .5;
+//    }
+//  
+//    // Ensure it is not less than 10 pumps per minute 
+//    if (pumpsPerSecond < .17) {
+//      pumpsPerSecond = .17;
+//    }
+//  
+//    double secsPerPump = (1.0 / pumpsPerSecond);
+//  
+//    pump(secsPerPump);
+//  }
+//  delay(100);
+//}
 
 
 /**
@@ -205,7 +202,7 @@ void loop() {
   if (isOn) {
     // Attempt to pump venitilator so the pressure sensor reads approximately a pressure of 20 cmH20
     // pumpVentilator(pumpsPerMin);
-    pumpsWithStepper((int)pumpsPerMin);
+    problem = pumpWithStepper((int)pumpsPerMin);
   }
   else {
     // Reset PID values
